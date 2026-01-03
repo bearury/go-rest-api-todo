@@ -5,22 +5,27 @@ import (
 	"github.com/bearury/go-rest-api-postgres-todo/pakage/repository"
 )
 
-type AuthorizationService interface {
+type Authorization interface {
 	CreateUser(user entitys.User) (int, error)
+	GenerateToken(username string, password string) (string, error)
+	ParseToken(token string) (int, error)
 }
 
-type TodoListService interface{}
+type TodoList interface {
+	CreateList(userId int, list entitys.Todo) (int, error)
+}
 
-type TodoItemService interface{}
+type TodoItem interface{}
 
 type Service struct {
-	AuthorizationService
-	TodoListService
-	TodoItemService
+	Authorization
+	TodoList
+	TodoItem
 }
 
 func NewService(repo *repository.Repository) *Service {
 	return &Service{
-		AuthorizationService: NewAuthService(repo.AuthorizationRepository),
+		Authorization: NewAuthService(repo.AuthorizationRepository),
+		TodoList:      NewTodoListService(repo.TodoListRepository),
 	}
 }
