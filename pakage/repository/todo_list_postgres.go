@@ -22,7 +22,7 @@ func (r *TodoListPostgres) Create(userId int, list entitys.Todo) (int, error) {
 	}
 
 	var id int
-	createListQuery := fmt.Sprintf("INSERT INTO %s (title, description) VALUES ($1, $2) RETURNING id)", todoListsTable)
+	createListQuery := fmt.Sprintf("INSERT INTO %s (title, description) VALUES ($1, $2) RETURNING id", todoListsTable)
 	row := tx.QueryRow(createListQuery, list.Title, list.Description)
 	if err := row.Scan(&id); err != nil {
 		tx.Rollback()
@@ -30,8 +30,8 @@ func (r *TodoListPostgres) Create(userId int, list entitys.Todo) (int, error) {
 	}
 
 	createUsersListQuery := fmt.Sprintf("INSERT INTO %s (user_id, list_id) VALUES ($1, $2)", usersListTable)
-	row = tx.QueryRow(createUsersListQuery, userId, list.Id)
-	if err := row.Scan(&id); err != nil {
+	_, err = tx.Exec(createUsersListQuery, userId, id)
+	if err != nil {
 		tx.Rollback()
 		return 0, err
 	}
