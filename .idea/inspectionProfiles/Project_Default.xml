@@ -5,6 +5,9 @@
       <functions>
         <function importPath="github.com/jmoiron/sqlx" name="Open" />
       </functions>
+      <methods>
+        <method importPath="database/sql" receiver="*Tx" name="Query" />
+      </methods>
     </inspection_tool>
     <inspection_tool class="SqlNoDataSourceInspection" enabled="false" level="WARNING" enabled_by_default="false" />
   </profile>

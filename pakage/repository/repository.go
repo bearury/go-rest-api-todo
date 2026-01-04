@@ -12,6 +12,8 @@ type AuthorizationRepository interface {
 
 type TodoListRepository interface {
 	Create(userId int, list entitys.Todo) (int, error)
+	GetAllLists(userId int) ([]entitys.Todo, error)
+	GetListById(userId, listId int) (entitys.Todo, error)
 }
 
 type TodoItemRepository interface{}
