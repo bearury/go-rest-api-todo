@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"database/sql"
 	"net/http"
-	"strconv"
 
 	"github.com/bearury/go-rest-api-postgres-todo/entitys"
 	"github.com/gin-gonic/gin"
@@ -49,19 +49,24 @@ func (handler *Handler) getListById(c *gin.Context) {
 		return
 	}
 
-	listId, err := strconv.Atoi(c.Param("id"))
+	listId, err := getParam(c)
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "Не верные параметры запроса")
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	list, err := handler.services.TodoList.GetListById(userId, listId)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
+		if err == sql.ErrNoRows {
+			newErrorResponse(c, http.StatusNotFound, "Список с таким ID не найден")
+			return
+		} else {
+			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"list": list})
+	c.JSON(http.StatusOK, list)
 }
 
 func (handler *Handler) updateList(c *gin.Context) {

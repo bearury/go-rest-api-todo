@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 const (
@@ -35,18 +36,32 @@ func (handler *Handler) userIdentity(c *gin.Context) {
 	c.Set(userCtx, userId)
 }
 
-func getUserId(c *gin.Context) (int, error) {
+func getUserId(c *gin.Context) (string, error) {
 	id, ok := c.Get(userCtx)
 	if !ok {
 		newErrorResponse(c, http.StatusInternalServerError, "User not found in context")
-		return 0, errors.New("User not found in context")
+		return "", errors.New("User not found in context")
 	}
 
-	idInt, ok := id.(int)
+	idString, ok := id.(string)
 	if !ok {
 		newErrorResponse(c, http.StatusInternalServerError, "Userid is invalid type")
-		return 0, errors.New("Userid is invalid type")
+		return "", errors.New("Userid is invalid type")
 	}
 
-	return idInt, nil
+	return idString, nil
+}
+
+func getParam(c *gin.Context) (string, error) {
+	id := c.Param("id")
+
+	if id == "" {
+		return "", errors.New("Param id is empty")
+	}
+
+	if err := uuid.Validate(id); err == nil {
+		return id, nil
+	} else {
+		return "", errors.New("Param id is not uuid")
+	}
 }

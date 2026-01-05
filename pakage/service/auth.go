@@ -18,7 +18,7 @@ const (
 
 type tokenClaims struct {
 	jwt.StandardClaims
-	UserId int `json:"user_id"`
+	UserId string `json:"user_id"`
 }
 
 type AuthService struct {
@@ -29,7 +29,7 @@ func NewAuthService(repo repository.AuthorizationRepository) *AuthService {
 	return &AuthService{repo: repo}
 }
 
-func (service *AuthService) CreateUser(user entitys.User) (int, error) {
+func (service *AuthService) CreateUser(user entitys.User) (string, error) {
 	user.Password = service.generatePasswordHash(user.Password)
 	return service.repo.CreateUser(user)
 }
@@ -52,7 +52,7 @@ func (service *AuthService) GenerateToken(username, password string) (string, er
 	return token.SignedString([]byte(signingKey))
 }
 
-func (service *AuthService) ParseToken(token string) (int, error) {
+func (service *AuthService) ParseToken(token string) (string, error) {
 	accessToken, err := jwt.ParseWithClaims(token, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
@@ -60,12 +60,12 @@ func (service *AuthService) ParseToken(token string) (int, error) {
 		return []byte(signingKey), nil
 	})
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	claims, ok := accessToken.Claims.(*tokenClaims)
 	if !ok {
-		return 0, fmt.Errorf("Invalid token claims")
+		return "", fmt.Errorf("Invalid token claims")
 	}
 
 	return claims.UserId, nil

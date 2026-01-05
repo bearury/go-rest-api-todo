@@ -6,18 +6,22 @@ import (
 )
 
 type Authorization interface {
-	CreateUser(user entitys.User) (int, error)
+	CreateUser(user entitys.User) (string, error)
 	GenerateToken(username string, password string) (string, error)
-	ParseToken(token string) (int, error)
+	ParseToken(token string) (string, error)
 }
 
 type TodoList interface {
-	CreateList(userId int, list entitys.Todo) (int, error)
-	GetAllLists(userId int) ([]entitys.Todo, error)
-	GetListById(userId, listId int) (entitys.Todo, error)
+	CreateList(userId string, list entitys.Todo) (string, error)
+	GetAllLists(userId string) ([]entitys.Todo, error)
+	GetListById(userId, listId string) (entitys.Todo, error)
 }
 
-type TodoItem interface{}
+type TodoItem interface {
+	CreateItem(userId, listId string, list entitys.TodoItem) (string, error)
+	GetAllItems(userId, listId string) ([]entitys.TodoItem, error)
+	GetItemById(listId, itemId string) (entitys.TodoItem, error)
+}
 
 type Service struct {
 	Authorization
@@ -29,5 +33,6 @@ func NewService(repo *repository.Repository) *Service {
 	return &Service{
 		Authorization: NewAuthService(repo.AuthorizationRepository),
 		TodoList:      NewTodoListService(repo.TodoListRepository),
+		TodoItem:      NewTodoItemService(repo.TodoItemRepository, repo.TodoListRepository),
 	}
 }

@@ -25,14 +25,14 @@ func (repo *AuthPostgres) GetUser(username, password string) (entitys.User, erro
 	return user, err
 }
 
-func (repo *AuthPostgres) CreateUser(user entitys.User) (int, error) {
-	var id int
+func (repo *AuthPostgres) CreateUser(user entitys.User) (string, error) {
+	var id string
 
 	query := fmt.Sprintf("INSERT INTO %s (name, username, password_hash) VALUES ($1, $2, $3) RETURNING id", usersTable)
 
 	row := repo.db.QueryRow(query, user.Name, user.Username, user.Password)
 	if err := row.Scan(&id); err != nil {
-		return 0, err
+		return "", err
 	}
 
 	return id, nil
