@@ -41,6 +41,13 @@ func (handler *Handler) InitRoutes() *gin.Engine {
 				items.DELETE("/:item_id", handler.deleteItem)
 			}
 		}
+
+		item := api.Group("/item")
+		{
+			item.GET("/:item_id", handler.getItemById)
+			item.PUT("/:item_id", handler.updateItem)
+			item.DELETE("/:item_id", handler.deleteItem)
+		}
 	}
 	return router
 }

@@ -20,7 +20,8 @@ type TodoList interface {
 type TodoItem interface {
 	CreateItem(userId, listId string, list entitys.TodoItem) (string, error)
 	GetAllItems(userId, listId string) ([]entitys.TodoItem, error)
-	GetItemById(listId, itemId string) (entitys.TodoItem, error)
+	GetItemById(userId, itemId string) (entitys.TodoItem, error)
+	UpdateItem(userId, itemId string, input entitys.UpdateItemInput) error
 }
 
 type Service struct {

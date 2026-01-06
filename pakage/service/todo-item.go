@@ -36,3 +36,7 @@ func (service *TodoItemService) GetAllItems(userId, listId string) ([]entitys.To
 func (service *TodoItemService) GetItemById(listId, itemId string) (entitys.TodoItem, error) {
 	return service.repo.GetItemById(listId, itemId)
 }
+
+func (s *TodoItemService) UpdateItem(userId, itemId string, input entitys.UpdateItemInput) error {
+	return s.repo.UpdateItem(userId, itemId, input)
+}
