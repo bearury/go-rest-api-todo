@@ -2,9 +2,11 @@ package repository
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/bearury/go-rest-api-postgres-todo/entitys"
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
 type TodoListPostgres struct {
@@ -57,4 +59,61 @@ func (r *TodoListPostgres) GetListById(userId, listId string) (entitys.Todo, err
 	err := r.db.Get(&todoList, query, userId, listId)
 
 	return todoList, err
+}
+
+func (r *TodoListPostgres) DeleteList(userId, listId string) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	queryDeleteItems := fmt.Sprintf("DELETE FROM %s WHERE id IN (SELECT item_id FROM %s WHERE list_id = $1)", todoItemsTable, listItemsTable)
+	_, err = tx.Exec(queryDeleteItems, listId)
+	if err != nil {
+		_ = tx.Rollback()
+		return fmt.Errorf("не удалось удалить элементы списка: %w", err)
+	}
+
+	queryDeleteList := fmt.Sprintf("DELETE FROM %s tl USING %s ul WHERE tl.id = ul.list_id AND ul.user_id=$1 AND ul.list_id=$2",
+		todoListsTable, usersListTable)
+	_, err = tx.Exec(queryDeleteList, userId, listId)
+	if err != nil {
+		_ = tx.Rollback()
+		return fmt.Errorf("не удалось удалить список: %w", err)
+	}
+
+	return tx.Commit()
+}
+
+func (r *TodoListPostgres) UpdateList(userId, listId string, input entitys.UpdateListInput) error {
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 1
+
+	if input.Title != nil {
+		setValues = append(setValues, fmt.Sprintf("title=$%d", argId))
+		args = append(args, *input.Title)
+		argId++
+	}
+
+	if input.Description != nil {
+		setValues = append(setValues, fmt.Sprintf("description=$%d", argId))
+		args = append(args, *input.Description)
+		argId++
+	}
+
+	// title=$1
+	// description=$1
+	// title=$1, description=$2
+	setQuery := strings.Join(setValues, ", ")
+
+	query := fmt.Sprintf("UPDATE %s tl SET %s FROM %s ul WHERE tl.id = ul.list_id AND ul.list_id=$%d AND ul.user_id=$%d",
+		todoListsTable, setQuery, usersListTable, argId, argId+1)
+	args = append(args, listId, userId)
+
+	logrus.Debugf("updateQuery: %s", query)
+	logrus.Debugf("args: %s", args)
+
+	_, err := r.db.Exec(query, args...)
+	return err
 }

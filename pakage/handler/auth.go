@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/bearury/go-rest-api-postgres-todo/entitys"
@@ -42,9 +43,15 @@ func (handler *Handler) signIn(c *gin.Context) {
 
 	token, err := handler.services.Authorization.GenerateToken(input.Username, input.Password)
 	if err != nil {
-		logrus.Errorf("Error generate Token: %s", err)
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
+		if err == sql.ErrNoRows {
+			logrus.Errorf("Error generate Token: %s", err)
+			newErrorResponse(c, http.StatusNotFound, "Неверный логин или пароль")
+			return
+		} else {
+			logrus.Errorf("Error generate Token: %s", err)
+			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, map[string]interface{}{

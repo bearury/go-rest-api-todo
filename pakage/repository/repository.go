@@ -14,6 +14,8 @@ type TodoListRepository interface {
 	Create(userId string, list entitys.Todo) (string, error)
 	GetAllLists(userId string) ([]entitys.Todo, error)
 	GetListById(userId, listId string) (entitys.Todo, error)
+	UpdateList(userId, listId string, input entitys.UpdateListInput) error
+	DeleteList(userId, listId string) error
 }
 
 type TodoItemRepository interface {
