@@ -27,14 +27,20 @@ func (r *TodoItemPostgres) Create(listId string, item entitys.TodoItem) (string,
 	createItemQuery := fmt.Sprintf("INSERT INTO %s (title, description) VALUES ($1, $2) RETURNING id", todoItemsTable)
 	row := tx.QueryRow(createItemQuery, item.Title, item.Description)
 	if err := row.Scan(&id); err != nil {
-		tx.Rollback()
+		err := tx.Rollback()
+		if err != nil {
+			return "", err
+		}
 		return "", err
 	}
 
 	createListItemQuery := fmt.Sprintf("INSERT INTO %s (list_id, item_id) VALUES ($1, $2)", listItemsTable)
 	_, err = tx.Exec(createListItemQuery, listId, id)
 	if err != nil {
-		tx.Rollback()
+		err := tx.Rollback()
+		if err != nil {
+			return "", err
+		}
 		return "", err
 	}
 
