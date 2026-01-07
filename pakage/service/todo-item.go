@@ -40,3 +40,11 @@ func (service *TodoItemService) GetItemById(listId, itemId string) (entitys.Todo
 func (s *TodoItemService) UpdateItem(userId, itemId string, input entitys.UpdateItemInput) error {
 	return s.repo.UpdateItem(userId, itemId, input)
 }
+
+func (service *TodoItemService) DeleteItem(userId, itemId string) error {
+	_, err := service.repo.GetItemById(userId, itemId)
+	if err != nil {
+		return errors.New("item already exists")
+	}
+	return service.repo.DeleteItem(userId, itemId)
+}

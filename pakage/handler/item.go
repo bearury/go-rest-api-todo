@@ -97,5 +97,28 @@ func (handler *Handler) updateItem(c *gin.Context) {
 }
 
 func (handler *Handler) deleteItem(c *gin.Context) {
+	userId, err := getUserId(c)
+	if err != nil {
+		return
+	}
 
+	itemId := c.Param("item_id")
+
+	_, err = handler.services.TodoItem.GetItemById(userId, itemId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			newErrorResponse(c, http.StatusNotFound, "Элемент с таким ID не существует")
+			return
+		} else {
+			newErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	if err := handler.services.TodoItem.DeleteItem(userId, itemId); err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, statusResponse{"ok"})
 }
